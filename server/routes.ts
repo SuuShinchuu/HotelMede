@@ -11,18 +11,16 @@ export function registerRoutes(app: Express): Server {
       const { neighborhood } = req.query;
 
       if (neighborhood && typeof neighborhood === 'string') {
-        const filteredHotels = await db.query.hotels.findMany({
-          where: eq(hotels.neighborhood, decodeURIComponent(neighborhood))
-        });
-
-        console.log(`Filtered hotels for ${neighborhood}:`, 
-          filteredHotels.map(h => ({ id: h.id, name: h.name, neighborhood: h.neighborhood }))
-        );
+        // Usando SQL más directo para asegurar el filtrado exacto
+        const filteredHotels = await db.select()
+          .from(hotels)
+          .where(eq(hotels.neighborhood, decodeURIComponent(neighborhood)))
+          .$prepare();
 
         return res.json(filteredHotels);
       }
 
-      const allHotels = await db.query.hotels.findMany();
+      const allHotels = await db.select().from(hotels);
       return res.json(allHotels);
     } catch (error) {
       console.error("Error fetching hotels:", error);
