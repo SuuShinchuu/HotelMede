@@ -10,13 +10,23 @@ export default function Hotels() {
   const neighborhood = new URLSearchParams(location.split("?")[1]).get("neighborhood");
 
   const { data: hotels, isLoading } = useQuery<Hotel[]>({
-    queryKey: ["/api/hotels", neighborhood],
+    queryKey: ["/api/hotels", { neighborhood }],
     queryFn: async () => {
-      const response = await fetch(`/api/hotels${neighborhood ? `?neighborhood=${encodeURIComponent(neighborhood)}` : ""}`);
+      const url = new URL("/api/hotels", window.location.origin);
+      if (neighborhood) {
+        url.searchParams.append("neighborhood", neighborhood);
+      }
+
+      console.log("Debug - Fetching hotels with URL:", url.toString());
+      const response = await fetch(url);
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-      return response.json();
+
+      const data = await response.json();
+      console.log(`Debug - Received ${data.length} hotels from API`);
+      return data;
     }
   });
 
