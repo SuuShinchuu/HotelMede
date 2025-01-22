@@ -2,21 +2,25 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
 import { hotels, reviews } from "@db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, ilike } from "drizzle-orm";
 
 export function registerRoutes(app: Express): Server {
   // Hotels API
   app.get("/api/hotels", async (req, res) => {
     try {
       const { neighborhood } = req.query;
+      console.log("Searching for neighborhood:", neighborhood);
 
       if (neighborhood && typeof neighborhood === 'string') {
-        // Usando SQL más directo para asegurar el filtrado exacto
-        const filteredHotels = await db.select()
-          .from(hotels)
-          .where(eq(hotels.neighborhood, decodeURIComponent(neighborhood)))
-          .$prepare();
+        const decodedNeighborhood = decodeURIComponent(neighborhood);
+        console.log("Decoded neighborhood:", decodedNeighborhood);
 
+        const filteredHotels = await db
+          .select()
+          .from(hotels)
+          .where(ilike(hotels.neighborhood, decodedNeighborhood));
+
+        console.log(`Found ${filteredHotels.length} hotels in ${decodedNeighborhood}`);
         return res.json(filteredHotels);
       }
 
