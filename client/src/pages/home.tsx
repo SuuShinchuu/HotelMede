@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import { Loader2, DollarSign, Map, Calendar, Coffee } from "lucide-react";
 import type { Hotel } from "@db/schema";
 import { Head } from "@/components/seo-head";
+import { ExpenseCalculator } from "@/components/expense-calculator";
 
 export default function Home() {
   const { data: hotels, isLoading } = useQuery<Hotel[]>({
@@ -20,7 +21,7 @@ export default function Home() {
       />
 
       <div className="min-h-screen">
-        <div 
+        <div
           className="relative h-[500px] bg-cover bg-center flex items-center justify-center"
           style={{
             backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1598227891897-23cc8627dd44')"
@@ -98,16 +99,28 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Nueva sección: Calculadora de Gastos */}
+        <div className="bg-background py-12">
+          <div className="container mx-auto">
+            <h2 className="text-3xl font-bold mb-8 text-center">Planifica tu Presupuesto</h2>
+            <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Utiliza nuestra calculadora para estimar los gastos de tu viaje a Medellín. 
+              Incluye alojamiento económico, transporte, comidas y actividades turísticas.
+            </p>
+            <ExpenseCalculator />
+          </div>
+        </div>
+
         <div className="bg-background py-12">
           <div className="container mx-auto">
             <h2 className="text-3xl font-bold mb-8">Barrios con Alojamiento Económico</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {["Boston", "La Candelaria", "Aranjuez"].map((neighborhood) => (
-                <Link 
-                  key={neighborhood} 
+                <Link
+                  key={neighborhood}
                   href={`/hotels?neighborhood=${encodeURIComponent(neighborhood)}`}
                 >
-                  <div 
+                  <div
                     className="relative h-48 rounded-lg overflow-hidden cursor-pointer"
                     style={{
                       backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://images.unsplash.com/photo-1656111530002-138e82f1e7a6')"
