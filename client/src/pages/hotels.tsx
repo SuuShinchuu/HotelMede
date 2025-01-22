@@ -26,6 +26,12 @@ export default function Hotels() {
 
       const data = await response.json();
       console.log(`Debug - Received ${data.length} hotels from API`);
+
+      // Filtrar los hoteles por barrio si hay uno seleccionado
+      if (neighborhood) {
+        return data.filter((hotel: Hotel) => hotel.neighborhood === neighborhood);
+      }
+
       return data;
     }
   });
