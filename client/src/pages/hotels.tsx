@@ -1,10 +1,12 @@
+typescript
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { HotelCard } from "@/components/hotel-card";
 import { SearchBar } from "@/components/search-bar";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import type { Hotel } from "@db/schema";
 import { Head } from "@/components/seo-head";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function Hotels() {
   const [location] = useLocation();
@@ -27,14 +29,16 @@ export default function Hotels() {
         }
 
         const response = await fetch(url);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Error al buscar hoteles');
+        }
+
         const data = await response.json();
-
-        console.log("URL:", url.toString());
-        console.log("Response data:", data);
-
         setHotels(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error fetching hotels');
+        console.error('Error fetching hotels:', err);
+        setError(err instanceof Error ? err.message : 'Error al buscar hoteles');
       } finally {
         setIsLoading(false);
       }
@@ -42,10 +46,6 @@ export default function Hotels() {
 
     fetchHotels();
   }, [neighborhood]);
-
-  if (error) {
-    return <div className="text-red-500">Error: {error}</div>;
-  }
 
   return (
     <div className="container mx-auto py-8">
@@ -56,18 +56,26 @@ export default function Hotels() {
           : "Explora todos los hoteles económicos disponibles en Medellín"}
       />
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">
+      <div className="mb-8 space-y-4">
+        <h1 className="text-3xl font-bold">
           {neighborhood 
             ? `Hoteles en ${neighborhood}`
             : "Todos los Hoteles"
           }
         </h1>
-        <SearchBar />
+        <SearchBar initialValue={neighborhood || ''} />
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center">
+        <div className="flex justify-center items-center min-h-[400px]">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       ) : (
@@ -75,9 +83,16 @@ export default function Hotels() {
           {hotels?.map((hotel) => (
             <HotelCard key={hotel.id} hotel={hotel} />
           ))}
-          {hotels?.length === 0 && (
-            <div className="col-span-full text-center py-12 text-muted-foreground">
-              No se encontraron hoteles {neighborhood && `en ${neighborhood}`}
+          {hotels?.length === 0 && !error && (
+            <div className="col-span-full text-center py-12">
+              <div className="max-w-md mx-auto space-y-4">
+                <p className="text-lg font-medium">
+                  No se encontraron hoteles {neighborhood && `en ${neighborhood}`}
+                </p>
+                <p className="text-muted-foreground">
+                  Intenta buscar en otro barrio o verifica el nombre del barrio ingresado.
+                </p>
+              </div>
             </div>
           )}
         </div>

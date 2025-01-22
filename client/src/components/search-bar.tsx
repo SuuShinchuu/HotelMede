@@ -24,15 +24,25 @@ const NEIGHBORHOODS = [
   "Estadio"
 ];
 
-export function SearchBar() {
-  const [searchTerm, setSearchTerm] = useState("");
+interface SearchBarProps {
+  initialValue?: string;
+}
+
+export function SearchBar({ initialValue = '' }: SearchBarProps) {
+  const [searchTerm, setSearchTerm] = useState(initialValue);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const [isSearching, setIsSearching] = useState(false);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const [_, navigate] = useLocation();
 
+  const normalizeText = (text: string) => 
+    text.toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
   const suggestions = NEIGHBORHOODS.filter(neighborhood =>
-    neighborhood.toLowerCase().includes(searchTerm.toLowerCase())
+    normalizeText(neighborhood).includes(normalizeText(searchTerm))
   );
 
   useEffect(() => {
@@ -45,11 +55,20 @@ export function SearchBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearch = (neighborhood?: string) => {
-    const term = neighborhood || searchTerm;
-    if (term.trim()) {
-      navigate(`/hotels?neighborhood=${encodeURIComponent(term.trim())}`);
+  const handleSearch = async (neighborhood?: string) => {
+    try {
+      setIsSearching(true);
+      const term = neighborhood || searchTerm;
+
+      if (term.trim()) {
+        navigate(`/hotels?neighborhood=${encodeURIComponent(term.trim())}`);
+      } else {
+        navigate('/hotels');
+      }
+
       setShowSuggestions(false);
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -76,7 +95,13 @@ export function SearchBar() {
 
   return (
     <div className="relative w-full max-w-2xl mx-auto">
-      <form onSubmit={(e) => { e.preventDefault(); handleSearch(); }} className="flex gap-2">
+      <form 
+        onSubmit={(e) => { 
+          e.preventDefault(); 
+          handleSearch(); 
+        }} 
+        className="flex gap-2"
+      >
         <div className="relative flex-1">
           <Input
             type="text"
@@ -88,7 +113,8 @@ export function SearchBar() {
               setActiveSuggestion(-1);
             }}
             onKeyDown={handleKeyDown}
-            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            className="bg-white dark:bg-gray-800"
+            disabled={isSearching}
           />
           {showSuggestions && searchTerm.trim() !== "" && suggestions.length > 0 && (
             <div
@@ -99,7 +125,7 @@ export function SearchBar() {
                 <div
                   key={suggestion}
                   className={cn(
-                    "px-4 py-2 cursor-pointer hover:bg-accent text-gray-900 dark:text-gray-100",
+                    "px-4 py-2 cursor-pointer hover:bg-accent",
                     index === activeSuggestion && "bg-accent"
                   )}
                   onClick={() => handleSearch(suggestion)}
@@ -110,9 +136,9 @@ export function SearchBar() {
             </div>
           )}
         </div>
-        <Button type="submit">
+        <Button type="submit" disabled={isSearching}>
           <Search className="h-4 w-4 mr-2" />
-          Buscar
+          {isSearching ? 'Buscando...' : 'Buscar'}
         </Button>
       </form>
     </div>

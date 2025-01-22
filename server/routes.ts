@@ -9,53 +9,68 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/hotels", async (req, res) => {
     try {
       const { neighborhood } = req.query;
-      console.log("Searching for neighborhood:", neighborhood);
 
-      if (neighborhood && typeof neighborhood === 'string') {
-        const decodedNeighborhood = decodeURIComponent(neighborhood);
-        console.log("Decoded neighborhood:", decodedNeighborhood);
-
-        const filteredHotels = await db
+      // Si no hay barrio, retornar todos los hoteles
+      if (!neighborhood || typeof neighborhood !== 'string') {
+        const allHotels = await db
           .select()
           .from(hotels)
-          .where(ilike(hotels.neighborhood, decodedNeighborhood));
-
-        console.log(`Found ${filteredHotels.length} hotels in ${decodedNeighborhood}`);
-        return res.json(filteredHotels);
+          .orderBy(hotels.name);
+        return res.json(allHotels);
       }
 
-      const allHotels = await db.select().from(hotels);
-      return res.json(allHotels);
+      // Búsqueda por barrio usando ILIKE
+      const searchTerm = decodeURIComponent(neighborhood).trim();
+      const filteredHotels = await db
+        .select()
+        .from(hotels)
+        .where(ilike(hotels.neighborhood, `%${searchTerm}%`))
+        .orderBy(hotels.name);
+
+      return res.json(filteredHotels);
     } catch (error) {
-      console.error("Error fetching hotels:", error);
-      res.status(500).send("Error fetching hotels");
+      console.error("Error al buscar hoteles:", error);
+      res.status(500).json({
+        error: "Error al buscar hoteles",
+        details: error instanceof Error ? error.message : "Error desconocido"
+      });
     }
   });
 
   // Hotel Details API
   app.get("/api/hotels/:id", async (req, res) => {
     try {
-      const [hotel] = await db
-        .select()
-        .from(hotels)
-        .where(eq(hotels.id, parseInt(req.params.id)))
-        .limit(1);
+      const hotelId = parseInt(req.params.id);
 
-      if (!hotel) {
-        return res.status(404).send("Hotel not found");
+      if (isNaN(hotelId)) {
+        return res.status(400).json({
+          error: "ID de hotel inválido"
+        });
       }
 
-      const hotelReviews = await db
-        .select()
-        .from(reviews)
-        .where(eq(reviews.hotelId, hotel.id))
-        .where(eq(reviews.isApproved, true))
-        .orderBy(desc(reviews.createdAt));
+      const hotel = await db.query.hotels.findFirst({
+        where: eq(hotels.id, hotelId),
+        with: {
+          reviews: {
+            where: eq(reviews.isApproved, true),
+            orderBy: desc(reviews.createdAt)
+          }
+        }
+      });
 
-      res.json({ ...hotel, reviews: hotelReviews });
+      if (!hotel) {
+        return res.status(404).json({
+          error: "Hotel no encontrado"
+        });
+      }
+
+      res.json(hotel);
     } catch (error) {
-      console.error("Error fetching hotel details:", error);
-      res.status(500).send("Error fetching hotel details");
+      console.error("Error al obtener detalles del hotel:", error);
+      res.status(500).json({
+        error: "Error al obtener detalles del hotel",
+        details: error instanceof Error ? error.message : "Error desconocido"
+      });
     }
   });
 
@@ -83,6 +98,23 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/hotels/:id/reviews", async (req, res) => {
     try {
       const hotelId = parseInt(req.params.id);
+
+      if (isNaN(hotelId)) {
+        return res.status(400).json({
+          error: "ID de hotel inválido"
+        });
+      }
+
+      const hotel = await db.query.hotels.findFirst({
+        where: eq(hotels.id, hotelId)
+      });
+
+      if (!hotel) {
+        return res.status(404).json({
+          error: "Hotel no encontrado"
+        });
+      }
+
       const [review] = await db
         .insert(reviews)
         .values({
@@ -90,10 +122,14 @@ export function registerRoutes(app: Express): Server {
           hotelId,
         })
         .returning();
+
       res.json(review);
     } catch (error) {
-      console.error("Error creating review:", error);
-      res.status(500).send("Error creating review");
+      console.error("Error al crear reseña:", error);
+      res.status(500).json({
+        error: "Error al crear la reseña",
+        details: error instanceof Error ? error.message : "Error desconocido"
+      });
     }
   });
 
