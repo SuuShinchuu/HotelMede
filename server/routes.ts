@@ -17,15 +17,24 @@ export function registerRoutes(app: Express): Server {
 
   // Hotels API
   app.get("/api/hotels", async (req, res) => {
-    const { neighborhood } = req.query;
-    let query = db.select().from(hotels);
+    try {
+      const { neighborhood } = req.query;
+      console.log("Searching hotels for neighborhood:", neighborhood); // Debug log
 
-    if (neighborhood) {
-      query = query.where(eq(hotels.neighborhood, neighborhood as string));
+      const query = db.select().from(hotels);
+
+      if (neighborhood && typeof neighborhood === 'string') {
+        const results = await query.where(eq(hotels.neighborhood, neighborhood));
+        console.log("Found hotels:", results.length); // Debug log
+        return res.json(results);
+      }
+
+      const allHotels = await query;
+      res.json(allHotels);
+    } catch (error) {
+      console.error("Error fetching hotels:", error);
+      res.status(500).send("Error fetching hotels");
     }
-
-    const results = await query;
-    res.json(results);
   });
 
   app.get("/api/hotels/:id", async (req, res) => {
