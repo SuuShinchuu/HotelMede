@@ -6,22 +6,22 @@ import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NEIGHBORHOODS = [
-  "Aranjuez",
-  "Belén",
-  "Boston",
-  "Buenos Aires",
-  "Castilla",
-  "El Poblado",
-  "Envigado",
-  "Estadio",
-  "Itagüí",
-  "La América",
   "La Candelaria",
-  "Laureles",
+  "Boston",
+  "Aranjuez",
   "Manrique",
   "Popular",
+  "Laureles",
+  "El Poblado",
+  "Belén",
+  "Envigado",
   "Robledo",
-  "San Javier"
+  "Castilla",
+  "Buenos Aires",
+  "San Javier",
+  "Itagüí",
+  "La América",
+  "Estadio"
 ];
 
 export function SearchBar() {
