@@ -7,23 +7,26 @@ import type { Hotel } from "@db/schema";
 
 export default function Hotels() {
   const [location] = useLocation();
-  const neighborhood = new URLSearchParams(location.split("?")[1]).get("neighborhood");
+  const params = new URLSearchParams(location.split("?")[1]);
+  const neighborhood = params.get("neighborhood");
 
   const { data: hotels, isLoading } = useQuery<Hotel[]>({
     queryKey: ["/api/hotels", { neighborhood }],
     queryFn: async () => {
       const url = new URL("/api/hotels", window.location.origin);
       if (neighborhood) {
-        url.searchParams.append("neighborhood", neighborhood);
+        url.searchParams.append("neighborhood", encodeURIComponent(neighborhood));
       }
+      console.log("Debug - Requesting URL:", url.toString());
 
       const response = await fetch(url);
-
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
 
-      return response.json();
+      const data = await response.json();
+      console.log("Debug - API Response:", { neighborhood, hotelCount: data.length });
+      return data;
     }
   });
 

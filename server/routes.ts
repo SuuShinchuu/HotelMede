@@ -18,24 +18,27 @@ export function registerRoutes(app: Express): Server {
   // Hotels API
   app.get("/api/hotels", async (req, res) => {
     try {
-      const neighborhood = req.query.neighborhood;
-      console.log("Debug - Neighborhood parameter:", neighborhood, typeof neighborhood);
+      let neighborhood = req.query.neighborhood;
 
-      if (neighborhood && typeof neighborhood === 'string') {
-        // Filtrar hoteles por barrio
+      // Si el neighborhood viene codificado en la URL, decodificarlo
+      if (typeof neighborhood === 'string') {
+        neighborhood = decodeURIComponent(neighborhood);
+        console.log("Debug - Processing request for neighborhood:", neighborhood);
+
+        // Realizar la consulta filtrada por barrio
         const filteredHotels = await db
           .select()
           .from(hotels)
           .where(eq(hotels.neighborhood, neighborhood));
 
-        console.log(`Debug - Filtered hotels for ${neighborhood}:`, filteredHotels);
+        console.log(`Debug - Found ${filteredHotels.length} hotels in ${neighborhood}`);
         return res.json(filteredHotels);
-      } else {
-        // Si no hay neighborhood especificado, retornar todos los hoteles
-        const allHotels = await db.select().from(hotels);
-        console.log("Debug - All hotels:", allHotels.length);
-        return res.json(allHotels);
       }
+
+      // Si no hay neighborhood, retornar todos los hoteles
+      const allHotels = await db.select().from(hotels);
+      console.log("Debug - Returning all hotels:", allHotels.length);
+      return res.json(allHotels);
     } catch (error) {
       console.error("Error fetching hotels:", error);
       res.status(500).send("Error fetching hotels");
@@ -118,7 +121,6 @@ export function registerRoutes(app: Express): Server {
 
     res.json({ ...hotel, reviews: hotelReviews });
   });
-
 
   const httpServer = createServer(app);
   return httpServer;
