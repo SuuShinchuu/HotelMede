@@ -19,11 +19,11 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/hotels", async (req, res) => {
     const { neighborhood } = req.query;
     let query = db.select().from(hotels);
-    
+
     if (neighborhood) {
-      query = query.where(like(hotels.neighborhood, `%${neighborhood}%`));
+      query = query.where(eq(hotels.neighborhood, neighborhood as string));
     }
-    
+
     const results = await query;
     res.json(results);
   });
