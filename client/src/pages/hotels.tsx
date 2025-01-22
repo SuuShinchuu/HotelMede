@@ -4,6 +4,7 @@ import { HotelCard } from "@/components/hotel-card";
 import { SearchBar } from "@/components/search-bar";
 import { Loader2 } from "lucide-react";
 import type { Hotel } from "@db/schema";
+import { Head } from "@/components/seo-head";
 
 export default function Hotels() {
   const [location] = useLocation();
@@ -12,17 +13,21 @@ export default function Hotels() {
 
   const { data: hotels, isLoading } = useQuery<Hotel[]>({
     queryKey: [`/api/hotels${neighborhood ? `?neighborhood=${encodeURIComponent(neighborhood)}` : ""}`],
-    queryFn: async ({ queryKey }) => {
-      const response = await fetch(queryKey[0]);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    }
   });
+
+  // Para debugging
+  console.log('Current neighborhood:', neighborhood);
+  console.log('Hotels data:', hotels);
 
   return (
     <div className="container mx-auto py-8">
+      <Head
+        title={neighborhood ? `Hoteles en ${neighborhood} - Medellín` : "Todos los Hoteles en Medellín"}
+        description={neighborhood 
+          ? `Encuentra los mejores hoteles económicos en ${neighborhood}, Medellín` 
+          : "Explora todos los hoteles económicos disponibles en Medellín"}
+      />
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4">
           {neighborhood 
