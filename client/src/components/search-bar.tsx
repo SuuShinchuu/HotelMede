@@ -6,16 +6,22 @@ import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NEIGHBORHOODS = [
-  "El Poblado",
-  "Laureles",
-  "Envigado",
+  "Aranjuez",
   "Belén",
-  "Manila",
-  "Provenza",
-  "La Floresta",
-  "Estadio",
   "Boston",
-  "Robledo"
+  "Buenos Aires",
+  "Castilla",
+  "El Poblado",
+  "Envigado",
+  "Estadio",
+  "Itagüí",
+  "La América",
+  "La Candelaria",
+  "Laureles",
+  "Manrique",
+  "Popular",
+  "Robledo",
+  "San Javier"
 ];
 
 export function SearchBar() {
@@ -50,7 +56,7 @@ export function SearchBar() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActiveSuggestion(prev => 
+      setActiveSuggestion(prev =>
         prev < suggestions.length - 1 ? prev + 1 : prev
       );
     } else if (e.key === "ArrowUp") {
