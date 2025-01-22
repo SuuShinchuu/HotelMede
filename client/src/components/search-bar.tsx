@@ -22,7 +22,7 @@ export function SearchBar() {
         placeholder="Buscar por barrio..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="flex-1"
+        className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
       />
       <Button type="submit">
         <Search className="h-4 w-4 mr-2" />
