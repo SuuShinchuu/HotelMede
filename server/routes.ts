@@ -11,27 +11,18 @@ export function registerRoutes(app: Express): Server {
       const { neighborhood } = req.query;
 
       if (neighborhood && typeof neighborhood === 'string') {
-        const decodedNeighborhood = decodeURIComponent(neighborhood);
+        const filteredHotels = await db.query.hotels.findMany({
+          where: eq(hotels.neighborhood, decodeURIComponent(neighborhood))
+        });
 
-        // Log para depuración
-        console.log("Buscando hoteles en el barrio:", decodedNeighborhood);
-
-        const filteredHotels = await db
-          .select()
-          .from(hotels)
-          .where(eq(hotels.neighborhood, decodedNeighborhood));
-
-        // Log para depuración
-        console.log("Hoteles encontrados:", filteredHotels.map(h => ({
-          id: h.id,
-          name: h.name,
-          neighborhood: h.neighborhood
-        })));
+        console.log(`Filtered hotels for ${neighborhood}:`, 
+          filteredHotels.map(h => ({ id: h.id, name: h.name, neighborhood: h.neighborhood }))
+        );
 
         return res.json(filteredHotels);
       }
 
-      const allHotels = await db.select().from(hotels);
+      const allHotels = await db.query.hotels.findMany();
       return res.json(allHotels);
     } catch (error) {
       console.error("Error fetching hotels:", error);
