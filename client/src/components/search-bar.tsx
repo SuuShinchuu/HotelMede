@@ -75,7 +75,7 @@ export function SearchBar() {
   };
 
   return (
-    <div className="relative w-full max-w-lg">
+    <div className="relative w-full max-w-2xl mx-auto">
       <form onSubmit={(e) => { e.preventDefault(); handleSearch(); }} className="flex gap-2">
         <div className="relative flex-1">
           <Input
