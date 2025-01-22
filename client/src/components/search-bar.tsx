@@ -90,16 +90,16 @@ export function SearchBar() {
             onKeyDown={handleKeyDown}
             className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
-          {showSuggestions && suggestions.length > 0 && (
+          {showSuggestions && searchTerm.trim() !== "" && suggestions.length > 0 && (
             <div
               ref={suggestionsRef}
-              className="absolute w-full mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-border z-50"
+              className="absolute w-full mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-border z-[100] max-h-[300px] overflow-y-auto"
             >
               {suggestions.map((suggestion, index) => (
                 <div
                   key={suggestion}
                   className={cn(
-                    "px-4 py-2 cursor-pointer hover:bg-accent",
+                    "px-4 py-2 cursor-pointer hover:bg-accent text-gray-900 dark:text-gray-100",
                     index === activeSuggestion && "bg-accent"
                   )}
                   onClick={() => handleSearch(suggestion)}
