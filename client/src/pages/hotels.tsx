@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { HotelCard } from "@/components/hotel-card";
 import { SearchBar } from "@/components/search-bar";
@@ -11,24 +11,41 @@ export default function Hotels() {
   const params = new URLSearchParams(location.split("?")[1]);
   const neighborhood = params.get("neighborhood");
 
-  const { data: hotels, isLoading } = useQuery<Hotel[]>({
-    queryKey: ["/api/hotels", neighborhood],
-    queryFn: async () => {
-      const url = new URL("/api/hotels", window.location.origin);
-      if (neighborhood) {
-        url.searchParams.set("neighborhood", neighborhood);
-      }
-      console.log("DEBUG - Requesting URL:", url.toString());
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+  useEffect(() => {
+    async function fetchHotels() {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const url = new URL("/api/hotels", window.location.origin);
+        if (neighborhood) {
+          url.searchParams.set("neighborhood", neighborhood);
+        }
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        console.log("URL:", url.toString());
+        console.log("Response data:", data);
+
+        setHotels(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Error fetching hotels');
+      } finally {
+        setIsLoading(false);
       }
-      const data = await response.json();
-      console.log("DEBUG - API Response:", data);
-      return data;
     }
-  });
+
+    fetchHotels();
+  }, [neighborhood]);
+
+  if (error) {
+    return <div className="text-red-500">Error: {error}</div>;
+  }
 
   return (
     <div className="container mx-auto py-8">
