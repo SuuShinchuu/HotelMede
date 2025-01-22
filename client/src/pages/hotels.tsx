@@ -12,12 +12,23 @@ export default function Hotels() {
   const neighborhood = params.get("neighborhood");
 
   const { data: hotels, isLoading } = useQuery<Hotel[]>({
-    queryKey: [`/api/hotels${neighborhood ? `?neighborhood=${encodeURIComponent(neighborhood)}` : ""}`],
-  });
+    queryKey: ["/api/hotels", neighborhood],
+    queryFn: async () => {
+      const url = new URL("/api/hotels", window.location.origin);
+      if (neighborhood) {
+        url.searchParams.set("neighborhood", neighborhood);
+      }
+      console.log("DEBUG - Requesting URL:", url.toString());
 
-  // Para debugging
-  console.log('Current neighborhood:', neighborhood);
-  console.log('Hotels data:', hotels);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      console.log("DEBUG - API Response:", data);
+      return data;
+    }
+  });
 
   return (
     <div className="container mx-auto py-8">
