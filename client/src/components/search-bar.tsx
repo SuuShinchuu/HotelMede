@@ -5,20 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 
 export function SearchBar() {
-  const [search, setSearch] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [_, navigate] = useLocation();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate(`/hotels?neighborhood=${encodeURIComponent(search)}`);
+    if (searchTerm.trim()) {
+      navigate(`/hotels?neighborhood=${encodeURIComponent(searchTerm.trim())}`);
+    }
   };
 
   return (
     <form onSubmit={handleSearch} className="flex gap-2 max-w-lg w-full">
       <Input
+        type="text"
         placeholder="Buscar por barrio..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
         className="flex-1"
       />
       <Button type="submit">
