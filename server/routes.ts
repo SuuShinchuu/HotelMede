@@ -20,24 +20,29 @@ export function registerRoutes(app: Express): Server {
     try {
       let neighborhood = req.query.neighborhood;
 
-      // Si el neighborhood viene codificado en la URL, decodificarlo
+      // Si el neighborhood viene codificado en la URL, decodificarlo y procesarlo
       if (typeof neighborhood === 'string') {
         neighborhood = decodeURIComponent(neighborhood);
         console.log("Debug - Processing request for neighborhood:", neighborhood);
 
-        // Realizar la consulta filtrada por barrio
-        const filteredHotels = await db
+        // Consulta filtrada por barrio usando comparación exacta
+        const query = db
           .select()
           .from(hotels)
           .where(eq(hotels.neighborhood, neighborhood));
 
-        console.log(`Debug - Found ${filteredHotels.length} hotels in ${neighborhood}`);
+        const filteredHotels = await query;
+        console.log(`Debug - Query result for ${neighborhood}:`, {
+          neighborhood,
+          hotelCount: filteredHotels.length,
+          hotels: filteredHotels.map(h => ({ id: h.id, name: h.name, neighborhood: h.neighborhood }))
+        });
+
         return res.json(filteredHotels);
       }
 
       // Si no hay neighborhood, retornar todos los hoteles
       const allHotels = await db.select().from(hotels);
-      console.log("Debug - Returning all hotels:", allHotels.length);
       return res.json(allHotels);
     } catch (error) {
       console.error("Error fetching hotels:", error);
