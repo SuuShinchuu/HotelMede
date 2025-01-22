@@ -18,49 +18,28 @@ export function registerRoutes(app: Express): Server {
   // Hotels API
   app.get("/api/hotels", async (req, res) => {
     try {
-      const { neighborhood } = req.query;
-      console.log("Debug - Received neighborhood query:", neighborhood);
+      const neighborhood = req.query.neighborhood;
+      console.log("Debug - Neighborhood parameter:", neighborhood, typeof neighborhood);
 
       if (neighborhood && typeof neighborhood === 'string') {
-        // Buscar hoteles específicamente para el barrio solicitado
+        // Filtrar hoteles por barrio
         const filteredHotels = await db
           .select()
           .from(hotels)
           .where(eq(hotels.neighborhood, neighborhood));
 
-        console.log(`Debug - Found ${filteredHotels.length} hotels in ${neighborhood}`);
+        console.log(`Debug - Filtered hotels for ${neighborhood}:`, filteredHotels);
         return res.json(filteredHotels);
+      } else {
+        // Si no hay neighborhood especificado, retornar todos los hoteles
+        const allHotels = await db.select().from(hotels);
+        console.log("Debug - All hotels:", allHotels.length);
+        return res.json(allHotels);
       }
-
-      // Si no hay neighborhood, retornar todos los hoteles
-      const allHotels = await db.select().from(hotels);
-      console.log("Debug - Returning all hotels:", allHotels.length);
-      return res.json(allHotels);
     } catch (error) {
       console.error("Error fetching hotels:", error);
       res.status(500).send("Error fetching hotels");
     }
-  });
-
-  app.get("/api/hotels/:id", async (req, res) => {
-    const [hotel] = await db
-      .select()
-      .from(hotels)
-      .where(eq(hotels.id, parseInt(req.params.id)))
-      .limit(1);
-
-    if (!hotel) {
-      return res.status(404).send("Hotel not found");
-    }
-
-    const hotelReviews = await db
-      .select()
-      .from(reviews)
-      .where(eq(reviews.hotelId, hotel.id))
-      .where(eq(reviews.isApproved, true))
-      .orderBy(desc(reviews.createdAt));
-
-    res.json({ ...hotel, reviews: hotelReviews });
   });
 
   // Admin Hotel Management
@@ -118,6 +97,28 @@ export function registerRoutes(app: Express): Server {
     await db.delete(reviews).where(eq(reviews.id, parseInt(req.params.id)));
     res.status(204).send();
   });
+
+  app.get("/api/hotels/:id", async (req, res) => {
+    const [hotel] = await db
+      .select()
+      .from(hotels)
+      .where(eq(hotels.id, parseInt(req.params.id)))
+      .limit(1);
+
+    if (!hotel) {
+      return res.status(404).send("Hotel not found");
+    }
+
+    const hotelReviews = await db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.hotelId, hotel.id))
+      .where(eq(reviews.isApproved, true))
+      .orderBy(desc(reviews.createdAt));
+
+    res.json({ ...hotel, reviews: hotelReviews });
+  });
+
 
   const httpServer = createServer(app);
   return httpServer;
