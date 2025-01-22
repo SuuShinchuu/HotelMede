@@ -17,22 +17,13 @@ export default function Hotels() {
         url.searchParams.append("neighborhood", neighborhood);
       }
 
-      console.log("Debug - Fetching hotels with URL:", url.toString());
       const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
 
-      const data = await response.json();
-      console.log(`Debug - Received ${data.length} hotels from API`);
-
-      // Filtrar los hoteles por barrio si hay uno seleccionado
-      if (neighborhood) {
-        return data.filter((hotel: Hotel) => hotel.neighborhood === neighborhood);
-      }
-
-      return data;
+      return response.json();
     }
   });
 
